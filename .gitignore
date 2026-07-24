@@ -1,1 +1,36 @@
+# Environment / local
 .env
+notes.org
+
+# Maven build output
+target/
+
+# Eclipse
+.classpath
+.project
+.settings/
+.apt_generated/
+.factorypath
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VS Code
+.vscode/
+
+# NetBeans
+nbproject/
+build/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
