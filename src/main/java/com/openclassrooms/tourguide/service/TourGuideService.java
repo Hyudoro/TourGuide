@@ -14,6 +14,7 @@ import com.openclassrooms.tourguide.helper.InternalTestHelper;
 import com.openclassrooms.tourguide.tracker.Tracker;
 import com.openclassrooms.tourguide.user.User;
 import com.openclassrooms.tourguide.user.UserReward;
+import com.openclassrooms.tourguide.util.DistanceCalculator;
 
 import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
@@ -28,6 +29,7 @@ public class TourGuideService {
     private final GpsUtil gpsUtil;
     private final RewardsService rewardsService;
     private final TripPricer tripPricer = new TripPricer();
+    private static final int NUMBER_OF_NEARBY_ATTRACTIONS = 5;
     public final Tracker tracker;
     boolean testMode = true;
 
@@ -87,15 +89,13 @@ public class TourGuideService {
         return visitedLocation;
     }
 
-    public List<Attraction> getNearByAttractions(VisitedLocation visitedLocation) {
-        List<Attraction> nearbyAttractions = new ArrayList<>();
-        for (Attraction attraction : gpsUtil.getAttractions()) {
-            if (rewardsService.isWithinAttractionProximity(attraction, visitedLocation.location)) {
-                nearbyAttractions.add(attraction);
-            }
-        }
-
-        return nearbyAttractions;
+    public List<Attraction> getNearbyAttractions(VisitedLocation visitedLocation){
+        return gpsUtil.getAttractions().stream()
+                .sorted(Comparator.comparingDouble(
+                    attraction -> DistanceCalculator
+                            .getDistance(attraction,visitedLocation.location)))
+                .limit(NUMBER_OF_NEARBY_ATTRACTIONS)
+                .collect(Collectors.toList());
     }
 
     private void addShutDownHook() {
