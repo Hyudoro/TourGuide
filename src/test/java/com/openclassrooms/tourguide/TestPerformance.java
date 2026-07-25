@@ -11,6 +11,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.junit.jupiter.api.Test;
 
 import com.openclassrooms.tourguide.helper.InternalTestHelper;
+import com.openclassrooms.tourguide.service.AttractionCatalog;
 import com.openclassrooms.tourguide.service.RewardsService;
 import com.openclassrooms.tourguide.service.TourGuideService;
 import com.openclassrooms.tourguide.user.User;
@@ -48,11 +49,12 @@ public class TestPerformance {
     @Test
     public void highVolumeTrackLocation() {
         GpsUtil gpsUtil = new GpsUtil();
-        RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
+        AttractionCatalog attractionCatalog = new AttractionCatalog(gpsUtil);
+        RewardsService rewardsService = new RewardsService(new RewardCentral(), attractionCatalog);
         // Users should be incremented up to 100,000, and test finishes within 15
         // minutes
         InternalTestHelper.setInternalUserNumber(100);
-        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService, attractionCatalog);
 
         List<User> allUsers = new ArrayList<>();
         allUsers = tourGuideService.getAllUsers();
@@ -73,14 +75,15 @@ public class TestPerformance {
     @Test
     public void highVolumeGetRewards() {
         GpsUtil gpsUtil = new GpsUtil();
-        RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
+        AttractionCatalog attractionCatalog = new AttractionCatalog(gpsUtil);
+        RewardsService rewardsService = new RewardsService(new RewardCentral(), attractionCatalog);
 
         // Users should be incremented up to 100,000, and test finishes within 20
         // minutes
         InternalTestHelper.setInternalUserNumber(100);
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
-        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService, attractionCatalog);
 
         Attraction attraction = gpsUtil.getAttractions().get(0);
         List<User> allUsers = new ArrayList<>();

@@ -27,14 +27,17 @@ import tripPricer.TripPricer;
 public class TourGuideService {
     private Logger logger = LoggerFactory.getLogger(TourGuideService.class);
     private final GpsUtil gpsUtil;
+    private final AttractionCatalog attractionCatalog;
     private final RewardsService rewardsService;
     private final TripPricer tripPricer = new TripPricer();
     private static final int NUMBER_OF_NEARBY_ATTRACTIONS = 5;
     public final Tracker tracker;
     boolean testMode = true;
 
-    public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
+    public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService,
+                            AttractionCatalog attractionCatalog) {
         this.gpsUtil = gpsUtil;
+        this.attractionCatalog = attractionCatalog;
         this.rewardsService = rewardsService;
 
         Locale.setDefault(Locale.US);
@@ -90,7 +93,7 @@ public class TourGuideService {
     }
 
     public List<Attraction> getNearbyAttractions(VisitedLocation visitedLocation){
-        return gpsUtil.getAttractions().stream()
+        return attractionCatalog.getAttractions().stream()
                 .sorted(Comparator.comparingDouble(
                     attraction -> DistanceCalculator
                             .getDistance(attraction,visitedLocation.location)))
