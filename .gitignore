@@ -1,7 +1,7 @@
 # Environment / local
 .env
 notes.org
-
+bin/
 # Maven build output
 target/
 
