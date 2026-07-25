@@ -8,7 +8,6 @@ import com.openclassrooms.tourguide.user.User;
 import com.openclassrooms.tourguide.user.UserReward;
 import com.openclassrooms.tourguide.util.DistanceCalculator;
 
-import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
@@ -21,12 +20,11 @@ public class RewardsService {
     private int defaultProximityBuffer = 10;
     private int proximityBuffer = defaultProximityBuffer;
     private int attractionProximityRange = 200;
-    private final GpsUtil gpsUtil;
+    private final AttractionCatalog attractionCatalog;
     private final RewardCentral rewardsCentral;
-
-    public RewardsService(GpsUtil gpsUtil, RewardCentral rewardCentral) {
-        this.gpsUtil = gpsUtil;
+    public RewardsService(RewardCentral rewardCentral, AttractionCatalog attractionCatalog) {
         this.rewardsCentral = rewardCentral;
+        this.attractionCatalog = attractionCatalog;
     }
 
     public void setProximityBuffer(int proximityBuffer) {
@@ -39,7 +37,7 @@ public class RewardsService {
 
     public void calculateRewards(User user) {
         List<VisitedLocation> userLocations = user.getVisitedLocations();
-        List<Attraction> attractions = gpsUtil.getAttractions();
+        List<Attraction> attractions = attractionCatalog.getAttractions();
 
         for(VisitedLocation visitedLocation : userLocations) {
             for(Attraction attraction : attractions) {
