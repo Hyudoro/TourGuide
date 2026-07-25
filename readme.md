@@ -1,7 +1,7 @@
 # Stack
 
-    > Java 17
-    > Spring Boot 3.X
+    > Java 21
+    > Spring Boot 3.5.16
     > JUnit 5
     > maven 3.3.4
 
