@@ -40,11 +40,11 @@ public class TestPerformance {
      *
      * highVolumeTrackLocation: 100,000 users within 15 minutes:
      * assertTrue(TimeUnit.MINUTES.toSeconds(15) >=
-     * TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()));
+     * stopWatch.getDuration().toSeconds());
      *
      * highVolumeGetRewards: 100,000 users within 20 minutes:
      * assertTrue(TimeUnit.MINUTES.toSeconds(20) >=
-     * TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()));
+     * stopWatch.getDuration().toSeconds());
      */
 
     @Test
@@ -56,6 +56,8 @@ public class TestPerformance {
         // minutes
         InternalTestHelper.setInternalUserNumber(100);
         TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService, attractionCatalog);
+        // otherwise the Tracker try to access the same ressource at the same time as the watcher (stopWatch).
+        tourGuideService.tracker.stopTracking();
 
         List<User> allUsers = new ArrayList<>();
         allUsers = tourGuideService.getAllUsers();
@@ -66,11 +68,9 @@ public class TestPerformance {
             tourGuideService.trackUserLocation(user);
         }
         stopWatch.stop();
-        tourGuideService.tracker.stopTracking();
-
-        System.out.println("highVolumeTrackLocation: Time Elapsed: "
-                + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds.");
-        assertTrue(TimeUnit.MINUTES.toSeconds(15) >= TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()));
+        long elapsedSeconds = stopWatch.getDuration().toSeconds();
+        System.out.println("highVolumeTrackLocation: Time Elapsed: " + elapsedSeconds + " seconds.");
+        assertTrue(TimeUnit.MINUTES.toSeconds(15) >= elapsedSeconds);
     }
 
     @Disabled("""
@@ -104,9 +104,9 @@ public class TestPerformance {
         stopWatch.stop();
         tourGuideService.tracker.stopTracking();
 
-        System.out.println("highVolumeGetRewards: Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime())
-                + " seconds.");
-        assertTrue(TimeUnit.MINUTES.toSeconds(20) >= TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()));
+        long elapsedSeconds = stopWatch.getDuration().toSeconds();
+        System.out.println("highVolumeGetRewards: Time Elapsed: " + elapsedSeconds + " seconds.");
+        assertTrue(TimeUnit.MINUTES.toSeconds(20) >= elapsedSeconds);
     }
 
 }
