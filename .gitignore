@@ -5,6 +5,10 @@ bin/
 # Maven build output
 target/
 
+# Emacs
+.editorconfig
+.#*
+
 # Eclipse
 .classpath
 .project

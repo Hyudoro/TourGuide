@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.openclassrooms.tourguide.helper.InternalTestHelper;
@@ -73,11 +72,6 @@ public class TestPerformance {
         assertTrue(TimeUnit.MINUTES.toSeconds(15) >= elapsedSeconds);
     }
 
-    @Disabled("""
-            Temporarily disabled: throws ConcurrentModificationException at RewardsService:42.
-            The Tracker thread started by the TourGuideService constructor appends to
-            user.visitedLocations while calculateRewards iterates that same ArrayList.
-            Re-enable when User is made thread-safe (Phase 2 of the concurrency work).""")
     @Test
     public void highVolumeGetRewards() {
         GpsUtil gpsUtil = new GpsUtil();
@@ -87,22 +81,20 @@ public class TestPerformance {
         // Users should be incremented up to 100,000, and test finishes within 20
         // minutes
         InternalTestHelper.setInternalUserNumber(100);
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
         TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService, attractionCatalog);
-
+        // otherwise the Tracker try to access the same ressource at the same time as the watchenr (stopWatch)
+        tourGuideService.tracker.stopTracking();
         Attraction attraction = gpsUtil.getAttractions().get(0);
         List<User> allUsers = new ArrayList<>();
         allUsers = tourGuideService.getAllUsers();
         allUsers.forEach(u -> u.addToVisitedLocations(new VisitedLocation(u.getUserId(), attraction, new Date())));
-
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         allUsers.forEach(u -> rewardsService.calculateRewards(u));
-
+        stopWatch.stop();
         for (User user : allUsers) {
             assertTrue(user.getUserRewards().size() > 0);
         }
-        stopWatch.stop();
-        tourGuideService.tracker.stopTracking();
 
         long elapsedSeconds = stopWatch.getDuration().toSeconds();
         System.out.println("highVolumeGetRewards: Time Elapsed: " + elapsedSeconds + " seconds.");
