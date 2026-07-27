@@ -13,6 +13,7 @@ public class User {
     private final String userName;
     private String phoneNumber;
     private String emailAddress;
+    private int rewardScanIndex = 0;
     private Date latestLocationTimestamp;
     private List<VisitedLocation> visitedLocations = new ArrayList<>();
     private List<UserReward> userRewards = new ArrayList<>();
@@ -27,6 +28,14 @@ public class User {
 
     public UUID getUserId() {
         return userId;
+    }
+
+    public int getRewardScanIndex() {
+        return rewardScanIndex;
+    }
+
+    public void setRewardScanIndex(int rewardScanIndex){
+        this.rewardScanIndex = rewardScanIndex;
     }
 
     public String getUserName() {
@@ -67,6 +76,7 @@ public class User {
 
     public void clearVisitedLocations() {
         visitedLocations.clear();
+        rewardScanIndex = 0;
     }
     /** noneMatch is a small optimization,
      * short-circuits on the first hit, filter().count() walks
