@@ -65,9 +65,10 @@ public class TourGuideService {
     public User getUser(String userName) {
         return internalUserMap.get(userName);
     }
-
+    /** An arrayList can size itself from the source in one shot
+     *  while the stream grows a buffer and resizes as it goes **/
     public List<User> getAllUsers() {
-        return internalUserMap.values().stream().collect(Collectors.toList());
+        return new ArrayList<>(internalUserMap.values());
     }
 
     public void addUser(User user) {
