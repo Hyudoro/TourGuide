@@ -39,4 +39,16 @@ public final class DistanceCalculator {
         double nauticalMiles = 60 * Math.toDegrees(angle);
         return STATUTE_MILES_PER_NAUTICAL_MILE * nauticalMiles;
     }
+    /**
+     * The cosine of the central angle matching the given distance.
+     * Comparing cosines answers "is it within X miles" without having to
+     * compute the distance.
+     **/
+    public static double cosineForMiles(double miles){
+        double degrees = miles / STATUTE_MILES_PER_NAUTICAL_MILE / 60.0;
+        if (degrees >= 180.0) {
+            return -1.0;
+        }
+        return Math.cos(Math.toRadians(degrees));
+    }
 }
