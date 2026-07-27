@@ -13,7 +13,7 @@ import com.openclassrooms.tourguide.service.TourGuideService;
 import com.openclassrooms.tourguide.user.User;
 
 public class Tracker implements Runnable {
-    private Logger logger = LoggerFactory.getLogger(Tracker.class);
+    private static final Logger logger = LoggerFactory.getLogger(Tracker.class);
     private static final long trackingPollingInterval = TimeUnit.MINUTES.toSeconds(5);
     // for better readability.
     private final ExecutorService executorService = Executors.newSingleThreadExecutor(
