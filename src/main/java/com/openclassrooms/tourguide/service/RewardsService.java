@@ -46,13 +46,12 @@ public class RewardsService {
         for (int i = start; i < end; i++) {
             VisitedLocation visitedLocation = userLocations.get(i);
             for (Attraction attraction : attractions){
-                if (user.getUserRewards().stream()
-                        .noneMatch(r ->
-                            r.attraction.attractionName.equals(attraction.attractionName))){
-                    if (nearAttraction(visitedLocation, attraction)){
-                        user.addUserReward(
-                            new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));                }
-                }
+                // The HasRewardFor cond act as a short-circuits as the
+                // first cond.
+                if (!user.hasRewardFor(attraction.attractionName)
+                    && nearAttraction(visitedLocation, attraction))
+                    user.addUserReward (new UserReward(visitedLocation, attraction,
+                        getRewardPoints(attraction,user)));
             }
         }
         user.setRewardScanIndex(end);

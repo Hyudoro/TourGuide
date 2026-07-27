@@ -1,9 +1,6 @@
 package com.openclassrooms.tourguide.user;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import gpsUtil.location.VisitedLocation;
 import tripPricer.Provider;
@@ -17,6 +14,7 @@ public class User {
     private Date latestLocationTimestamp;
     private List<VisitedLocation> visitedLocations = new ArrayList<>();
     private List<UserReward> userRewards = new ArrayList<>();
+    private final Set<String> rewardedAttractionNames = new HashSet<>();
     private UserPreferences userPreferences = new UserPreferences();
     private List<Provider> tripDeals = new ArrayList<>();
     public User(UUID userId, String userName, String phoneNumber, String emailAddress) {
@@ -78,18 +76,20 @@ public class User {
         visitedLocations.clear();
         rewardScanIndex = 0;
     }
-    /** noneMatch is a small optimization,
-     * short-circuits on the first hit, filter().count() walks
-     * the whole list every time. **/
-    public void addUserReward(UserReward userReward) {
-        if(userRewards.stream().noneMatch(r -> r.attraction.attractionName
-                .equals(userReward.attraction.attractionName))) {
-                    userRewards.add(userReward);
+    /** the Set does one hash lookup instead of a scan for checking
+     *  Duplicates. **/
+    public void addUserReward(UserReward userReward){
+        if (rewardedAttractionNames.add(userReward.attraction.attractionName)){
+            userRewards.add(userReward);
         }
     }
 
     public List<UserReward> getUserRewards() {
-        return userRewards;
+        return Collections.unmodifiableList(userRewards);
+    }
+
+    public boolean hasRewardFor(String attractionName){
+        return rewardedAttractionNames.contains(attractionName);
     }
 
     public UserPreferences getUserPreferences() {
