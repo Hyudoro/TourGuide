@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
@@ -94,13 +93,37 @@ public class TourGuideService {
         return visitedLocation;
     }
 
-    public List<Attraction> getNearbyAttractions(VisitedLocation visitedLocation){
-        return attractionCatalog.getAttractions().stream()
-                .sorted(Comparator.comparingDouble(
-                    attraction -> DistanceCalculator
-                            .getDistance(attraction,visitedLocation.location)))
-                .limit(NUMBER_OF_NEARBY_ATTRACTIONS)
-                .collect(Collectors.toList());
+    public List<Attraction> getNearbyAttractions(VisitedLocation visitedLocation) {
+        List<Attraction> attractions = attractionCatalog.getAttractions();
+        int total = attractions.size();
+        int wanted = Math.min(NUMBER_OF_NEARBY_ATTRACTIONS, total);
+
+        // one distance per attraction; origin[i] remembers which attraction miles[i] came from
+        double[] miles = new double[total];
+        int[] origin = new int[total];
+        for (int i = 0; i < total; i++) {
+            miles[i] = DistanceCalculator.getDistance(attractions.get(i),
+                visitedLocation.location);
+            origin[i] = i;
+        }
+        List<Attraction> nearest = new ArrayList<>(wanted);
+        int live = total;   // everything from 'live onward is removed
+        for (int pick = 0; pick < wanted; pick++) {
+            int best = 0;
+            double bestMiles = miles[0];
+            for (int i = 1; i < live; i++) {                // 26, then 25, 24, 23, 22
+                if (miles[i] < bestMiles) {
+                    bestMiles = miles[i];
+                    best = i;
+                }
+            }
+            nearest.add(attractions.get(origin[best]));     // origin[best], not best
+
+            live--;                                         // drop the last live element into the hole
+            miles[best]  = miles[live];
+            origin[best] = origin[live];
+        }
+        return nearest;
     }
 
     private void addShutDownHook() {
