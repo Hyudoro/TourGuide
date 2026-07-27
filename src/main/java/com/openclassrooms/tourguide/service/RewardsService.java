@@ -19,6 +19,8 @@ public class RewardsService {
     // proximity in miles
     private int defaultProximityBuffer = 10;
     private int proximityBuffer = defaultProximityBuffer;
+    private double proximityCosThreshold  =
+        DistanceCalculator.cosineForMiles(defaultProximityBuffer);
     private int attractionProximityRange = 200;
     private final AttractionCatalog attractionCatalog;
     private final RewardCentral rewardsCentral;
@@ -29,10 +31,11 @@ public class RewardsService {
 
     public void setProximityBuffer(int proximityBuffer) {
         this.proximityBuffer = proximityBuffer;
+        this.proximityCosThreshold = DistanceCalculator.cosineForMiles(proximityBuffer);
     }
 
     public void setDefaultProximityBuffer() {
-        proximityBuffer = defaultProximityBuffer;
+        setProximityBuffer(defaultProximityBuffer);
     }
 
     public void calculateRewards(User user) {
@@ -42,16 +45,24 @@ public class RewardsService {
         if (start >= end){
             return;
         }
-        List<Attraction> attractions = attractionCatalog.getAttractions();
+        List<ProximityCheck> checks = attractionCatalog.getProximityChecks();
         for (int i = start; i < end; i++) {
             VisitedLocation visitedLocation = userLocations.get(i);
-            for (Attraction attraction : attractions){
-                // The HasRewardFor cond act as a short-circuits as the
-                // first cond.
+
+            // The point's own trig, once per location instead of once per attraction
+            double latitude = Math.toRadians(visitedLocation.location.latitude);
+            double sinLat = Math.sin(latitude);
+            double cosLat = Math.cos(latitude);
+            double lonRadians = Math.toRadians(visitedLocation.location.longitude);
+
+            for (ProximityCheck check : checks){
+                Attraction attraction = check.attraction();
+                // hasRewardFor first: it short-circuits before any trig runs.
                 if (!user.hasRewardFor(attraction.attractionName)
-                    && nearAttraction(visitedLocation, attraction))
+                    && check.covers(sinLat,cosLat, lonRadians, proximityCosThreshold)){
                     user.addUserReward (new UserReward(visitedLocation, attraction,
                         getRewardPoints(attraction,user)));
+                }
             }
         }
         user.setRewardScanIndex(end);
@@ -59,10 +70,6 @@ public class RewardsService {
 
     public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
         return DistanceCalculator.getDistance(attraction, location) > attractionProximityRange ? false : true;
-    }
-
-    private boolean nearAttraction(VisitedLocation visitedLocation, Attraction attraction) {
-        return DistanceCalculator.getDistance(attraction, visitedLocation.location) > proximityBuffer ? false : true;
     }
 
     private int getRewardPoints(Attraction attraction, User user) {
