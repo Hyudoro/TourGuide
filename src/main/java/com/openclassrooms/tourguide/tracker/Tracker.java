@@ -24,11 +24,17 @@ public class Tracker implements Runnable {
         });
     private final TourGuideService tourGuideService;
     private volatile boolean stop = false;
+    private final Thread shutdownHook;
 
     public Tracker(TourGuideService tourGuideService) {
         this.tourGuideService = tourGuideService;
 
         executorService.submit(this);
+
+        // The JVM holds this hook until exit, and the hook holds us,
+        // so nothing behind this Tracker can be collected until stopTracking().
+        shutdownHook = new Thread(this::stopTracking, "tracker-shutdown");
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
     }
 
     /**
@@ -37,6 +43,7 @@ public class Tracker implements Runnable {
     public void stopTracking() {
         stop = true;
         executorService.shutdownNow();
+        unregisterShutdownHook();
         try {
             if (!executorService.awaitTermination(5, TimeUnit.SECONDS))
                 logger.warn("Tracker did not terminate within 5 seconds");
@@ -45,6 +52,14 @@ public class Tracker implements Runnable {
         }
     }
 
+    /** Lets the JVM release this Tracker, and the service behind it, once it is stopped. */
+    private void unregisterShutdownHook() {
+        try {
+            Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        } catch (IllegalStateException shutdownAlreadyRunning) {
+            // called by the hook. Nothing left to unregister.
+        }
+    }
 
     @Override
     public void run() {

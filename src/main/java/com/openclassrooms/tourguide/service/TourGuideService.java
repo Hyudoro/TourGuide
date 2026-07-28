@@ -6,6 +6,8 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
+import jakarta.annotation.PreDestroy;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -49,8 +51,14 @@ public class TourGuideService {
             logger.debug("Finished initializing users");
         }
         tracker = new Tracker(this);
-        addShutDownHook();
     }
+
+    @PreDestroy
+    void stopTracker(){
+        tracker.stopTracking();
+    }
+
+
 
     public List<UserReward> getUserRewards(User user) {
         return user.getUserRewards();
@@ -124,14 +132,6 @@ public class TourGuideService {
             origin[best] = origin[live];
         }
         return nearest;
-    }
-
-    private void addShutDownHook() {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                tracker.stopTracking();
-            }
-        });
     }
 
     /**********************************************************************************
