@@ -65,9 +65,7 @@ public class TourGuideService {
     }
 
     public VisitedLocation getUserLocation(User user) {
-        VisitedLocation visitedLocation = (user.getVisitedLocations().size() > 0) ? user.getLastVisitedLocation()
-                : trackUserLocation(user);
-        return visitedLocation;
+        return user.hasVisitedLocation() ? user.getLastVisitedLocation() : trackUserLocation(user);
     }
 
     public User getUser(String userName) {
@@ -93,11 +91,16 @@ public class TourGuideService {
         user.setTripDeals(providers);
         return providers;
     }
+    /** The one entry for a new position: store it as the latest, then reward it. */
+    public void recordLocation(User user, VisitedLocation visitedLocation){
+        user.setLastVisitedLocation(visitedLocation);
+        rewardsService.calculateRewards(user, visitedLocation);
+    }
 
     public VisitedLocation trackUserLocation(User user) {
         VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
-        user.addToVisitedLocations(visitedLocation);
-        rewardsService.calculateRewards(user);
+        //Added the funel
+        recordLocation(user,visitedLocation);
         return visitedLocation;
     }
 
@@ -150,23 +153,23 @@ public class TourGuideService {
             String phone = "000";
             String email = userName + "@tourGuide.com";
             User user = new User(UUID.randomUUID(), userName, phone, email);
-            generateUserLocationHistory(user);
+            seedUserLocation(user);
 
             internalUserMap.put(userName, user);
         });
         logger.debug("Created " + InternalTestHelper.getInternalUserNumber() + " internal test users.");
     }
 
-    private void generateUserLocationHistory(User user) {
-        IntStream.range(0, 5).forEach(i -> {
-            user.addToVisitedLocations(new VisitedLocation(user.getUserId(),
-                    new Location(generateRandomLatitude(), generateRandomLongitude()), getRandomTime()));
-        });
+    private void seedUserLocation(User user) {
+        user.setLastVisitedLocation(new VisitedLocation(user.getUserId(),
+            new Location(generateRandomLatitude(), generateRandomLongitude()),
+            getRandomTime()));
     }
 
     private double generateRandomLongitude() {
         return ThreadLocalRandom.current().nextDouble(-180,180);
     }
+
 
     private double generateRandomLatitude() {
         return ThreadLocalRandom.current().nextDouble(-85.05112878, 85.05112878);

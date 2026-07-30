@@ -10,9 +10,7 @@ public class User {
     private final String userName;
     private String phoneNumber;
     private String emailAddress;
-    private int rewardScanIndex = 0;
-    private Date latestLocationTimestamp;
-    private List<VisitedLocation> visitedLocations = new ArrayList<>();
+    private volatile VisitedLocation lastVisitedLocation;
     private List<UserReward> userRewards = new ArrayList<>();
     private final Set<String> rewardedAttractionNames = new HashSet<>();
     private UserPreferences userPreferences = new UserPreferences();
@@ -26,14 +24,6 @@ public class User {
 
     public UUID getUserId() {
         return userId;
-    }
-
-    public int getRewardScanIndex() {
-        return rewardScanIndex;
-    }
-
-    public void setRewardScanIndex(int rewardScanIndex){
-        this.rewardScanIndex = rewardScanIndex;
     }
 
     public String getUserName() {
@@ -56,26 +46,6 @@ public class User {
         return emailAddress;
     }
 
-    public void setLatestLocationTimestamp(Date latestLocationTimestamp) {
-        this.latestLocationTimestamp = latestLocationTimestamp;
-    }
-
-    public Date getLatestLocationTimestamp() {
-        return latestLocationTimestamp;
-    }
-
-    public void addToVisitedLocations(VisitedLocation visitedLocation) {
-        visitedLocations.add(visitedLocation);
-    }
-
-    public List<VisitedLocation> getVisitedLocations() {
-        return visitedLocations;
-    }
-
-    public void clearVisitedLocations() {
-        visitedLocations.clear();
-        rewardScanIndex = 0;
-    }
     /** the Set does one hash lookup instead of a scan for checking
      *  Duplicates. **/
     public void addUserReward(UserReward userReward){
@@ -101,7 +71,15 @@ public class User {
     }
 
     public VisitedLocation getLastVisitedLocation() {
-        return visitedLocations.get(visitedLocations.size() - 1);
+        return lastVisitedLocation;
+    }
+
+    public void setLastVisitedLocation(VisitedLocation visitedLocation){
+        this.lastVisitedLocation = visitedLocation;
+    }
+
+    public boolean hasVisitedLocation() {
+        return lastVisitedLocation != null;
     }
 
     public void setTripDeals(List<Provider> tripDeals) {
