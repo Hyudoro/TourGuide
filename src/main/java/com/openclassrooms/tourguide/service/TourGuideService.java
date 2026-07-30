@@ -3,6 +3,7 @@ package com.openclassrooms.tourguide.service;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
@@ -78,9 +79,7 @@ public class TourGuideService {
     }
 
     public void addUser(User user) {
-        if (!internalUserMap.containsKey(user.getUserName())) {
-            internalUserMap.put(user.getUserName(), user);
-        }
+        internalUserMap.putIfAbsent(user.getUserName(), user);
     }
 
     public List<Provider> getTripDeals(User user) {
@@ -145,7 +144,9 @@ public class TourGuideService {
     private static final String tripPricerApiKey = "test-server-api-key";
     // Database connection will be used for external users, but for testing purposes
     // internal users are provided and stored in memory
-    private final Map<String, User> internalUserMap = new HashMap<>();
+    private final Map<String, User> internalUserMap =
+        new ConcurrentHashMap<>((int) (InternalTestHelper.getInternalUserNumber()
+                                       / 0.75f) + 1);
 
     private void initializeInternalUsers() {
         IntStream.range(0, InternalTestHelper.getInternalUserNumber()).forEach(i -> {
