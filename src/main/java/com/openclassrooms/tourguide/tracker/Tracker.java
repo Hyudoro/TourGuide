@@ -28,8 +28,9 @@ public class Tracker implements Runnable {
 
     public Tracker(TourGuideService tourGuideService) {
         this.tourGuideService = tourGuideService;
-
-        executorService.submit(this);
+        // execute() has no Future to swallow into, an uncaught throwable
+        // reaches the thread's default.
+        executorService.execute(this);
 
         // The JVM holds this hook until exit, and the hook holds us,
         // so nothing behind this Tracker can be collected until stopTracking().
@@ -69,19 +70,23 @@ public class Tracker implements Runnable {
                 logger.debug("Tracker stopping");
                 break;
             }
-
-            List<User> users = tourGuideService.getAllUsers();
-            logger.debug("Begin Tracker. Tracking " + users.size() + " users.");
-            stopWatch.start();
-            // We check per user not per pass.
-            for (User user : users){
-                if (stop) break;
-                tourGuideService.trackUserLocation(user);
+            try {
+                List<User> users = tourGuideService.getAllUsers();
+                logger.debug("Begin Tracker. Tracking " + users.size() + " users.");
+                stopWatch.start();
+                // We check per user not per pass.
+                for (User user : users){
+                    if (stop) break;
+                    tourGuideService.trackUserLocation(user);
+                }
+                if (stop) break; // that way we don't fall into the polling sleep after being told to stop.
+                stopWatch.stop();
+                logger.debug("Tracker Time Elapsed: " + stopWatch.getDuration().toSeconds() + " seconds.");
+                stopWatch.reset();
+            } catch (Exception e) {
+                logger.debug("Tracker pass failed, continuing with the next one",e);
+                stopWatch.reset();
             }
-            if (stop) break; // that way we don't fall into the polling sleep after being told to stop.
-            stopWatch.stop();
-            logger.debug("Tracker Time Elapsed: " + stopWatch.getDuration().toSeconds() + " seconds.");
-            stopWatch.reset();
             try {
                 logger.debug("Tracker sleeping");
                 TimeUnit.SECONDS.sleep(trackingPollingInterval);

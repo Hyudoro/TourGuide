@@ -58,7 +58,6 @@ public class RewardsService {
         }
     }
 
-
     public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
         return DistanceCalculator.getDistance(attraction, location) > attractionProximityRange ? false : true;
     }

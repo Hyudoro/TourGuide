@@ -170,7 +170,6 @@ public class TourGuideService {
         return ThreadLocalRandom.current().nextDouble(-180,180);
     }
 
-
     private double generateRandomLatitude() {
         return ThreadLocalRandom.current().nextDouble(-85.05112878, 85.05112878);
     }
