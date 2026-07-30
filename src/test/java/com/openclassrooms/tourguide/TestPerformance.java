@@ -87,10 +87,10 @@ public class TestPerformance {
         Attraction attraction = gpsUtil.getAttractions().get(0);
         List<User> allUsers = new ArrayList<>();
         allUsers = tourGuideService.getAllUsers();
-        allUsers.forEach(u -> u.addToVisitedLocations(new VisitedLocation(u.getUserId(), attraction, new Date())));
+        allUsers.forEach(u -> u.setLastVisitedLocation(new VisitedLocation(u.getUserId(), attraction, new Date())));
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
-        allUsers.forEach(u -> rewardsService.calculateRewards(u));
+        allUsers.forEach(u -> rewardsService.calculateRewards(u,u.getLastVisitedLocation()));
         stopWatch.stop();
         for (User user : allUsers) {
             assertTrue(user.getUserRewards().size() > 0);

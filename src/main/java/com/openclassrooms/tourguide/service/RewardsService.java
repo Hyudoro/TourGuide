@@ -38,35 +38,26 @@ public class RewardsService {
         setProximityBuffer(defaultProximityBuffer);
     }
 
-    public void calculateRewards(User user) {
-        List<VisitedLocation> userLocations = user.getVisitedLocations();
-        int start = user.getRewardScanIndex();
-        int end = userLocations.size();
-        if (start >= end){
-            return;
-        }
+    public void calculateRewards(User user, VisitedLocation visitedLocation) {
         List<ProximityCheck> checks = attractionCatalog.getProximityChecks();
-        for (int i = start; i < end; i++) {
-            VisitedLocation visitedLocation = userLocations.get(i);
 
-            // The point's own trig, once per location instead of once per attraction
-            double latitude = Math.toRadians(visitedLocation.location.latitude);
-            double sinLat = Math.sin(latitude);
-            double cosLat = Math.cos(latitude);
-            double lonRadians = Math.toRadians(visitedLocation.location.longitude);
+        // The point's own trig, once per location instead of once per attraction
+        double latitude = Math.toRadians(visitedLocation.location.latitude);
+        double sinLat = Math.sin(latitude);
+        double cosLat = Math.cos(latitude);
+        double lonRadians = Math.toRadians(visitedLocation.location.longitude);
 
-            for (ProximityCheck check : checks){
-                Attraction attraction = check.attraction();
-                // hasRewardFor first: it short-circuits before any trig runs.
-                if (!user.hasRewardFor(attraction.attractionName)
-                    && check.covers(sinLat,cosLat, lonRadians, proximityCosThreshold)){
-                    user.addUserReward (new UserReward(visitedLocation, attraction,
-                        getRewardPoints(attraction,user)));
-                }
+        for (ProximityCheck check : checks){
+            Attraction attraction = check.attraction();
+            // hasRewardFor first: it short-circuits before any trig runs.
+            if (!user.hasRewardFor(attraction.attractionName)
+                && check.covers(sinLat,cosLat, lonRadians, proximityCosThreshold)){
+                user.addUserReward (new UserReward(visitedLocation, attraction,
+                    getRewardPoints(attraction,user)));
             }
         }
-        user.setRewardScanIndex(end);
     }
+
 
     public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
         return DistanceCalculator.getDistance(attraction, location) > attractionProximityRange ? false : true;
