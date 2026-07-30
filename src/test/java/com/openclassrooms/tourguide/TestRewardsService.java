@@ -64,8 +64,8 @@ public class TestRewardsService {
         TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService, attractionCatalog);
         tourGuideService.tracker.stopTracking();
         User user = tourGuideService.getAllUsers().get(0);
-        // because ProximityBuffer is MAX_VALUE whatever location is last, will
-        // considered as nil.
+        // buffer = MAX_VALUE clamps the cosine threshold to -1.0, so every attraction
+        // covers every point: one location is enough to grant all 26.
         rewardsService.calculateRewards(user, user.getLastVisitedLocation());
         List<UserReward> userRewards = tourGuideService.getUserRewards(tourGuideService.getAllUsers().get(0));
 

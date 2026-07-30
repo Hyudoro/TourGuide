@@ -72,7 +72,7 @@ public class Tracker implements Runnable {
             }
             try {
                 List<User> users = tourGuideService.getAllUsers();
-                logger.debug("Begin Tracker. Tracking " + users.size() + " users.");
+                logger.debug("Begin Tracker. Tracking {} users.", users.size());
                 stopWatch.start();
                 // We check per user not per pass.
                 for (User user : users){
@@ -81,10 +81,10 @@ public class Tracker implements Runnable {
                 }
                 if (stop) break; // that way we don't fall into the polling sleep after being told to stop.
                 stopWatch.stop();
-                logger.debug("Tracker Time Elapsed: " + stopWatch.getDuration().toSeconds() + " seconds.");
+                logger.debug("Tracker Time Elapsed: {} seconds.", stopWatch.getDuration().toSeconds());
                 stopWatch.reset();
             } catch (Exception e) {
-                logger.debug("Tracker pass failed, continuing with the next one",e);
+                logger.error("Tracker pass failed, continuing with the next one",e);
                 stopWatch.reset();
             }
             try {
