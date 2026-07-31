@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
@@ -180,4 +182,11 @@ public class TourGuideService {
         return Date.from(localDateTime.toInstant(ZoneOffset.UTC));
     }
 
+    public void trackAllUsers(List<User> users){
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            for (User user : users){
+                executor.execute(() -> trackUserLocation(user));
+            }
+	    }
+    }
 }

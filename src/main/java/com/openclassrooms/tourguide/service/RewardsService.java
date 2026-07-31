@@ -2,6 +2,8 @@ package com.openclassrooms.tourguide.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.springframework.stereotype.Service;
 
@@ -67,6 +69,19 @@ public class RewardsService {
                 getRewardPoints(attraction, user)));
         }
     }
+
+    public void calculateRewards(List<User> users){
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor())
+        {
+            for (User user : users){
+                VisitedLocation location = user.getLastVisitedLocation();
+                if (location != null) {
+                    executor.execute(() -> calculateRewards(user, location));
+                }
+            }
+        }
+    }
+
     public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
         return DistanceCalculator.getDistance(attraction, location) >
         attractionProximityRange ? false : true;
