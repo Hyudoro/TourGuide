@@ -1,6 +1,11 @@
 package com.openclassrooms.tourguide.user;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 import gpsUtil.location.VisitedLocation;
 import tripPricer.Provider;
@@ -12,7 +17,9 @@ public class User {
     private String emailAddress;
     private volatile VisitedLocation lastVisitedLocation;
     private List<UserReward> userRewards = new ArrayList<>();
-    private final Set<String> rewardedAttractionNames = new HashSet<>();
+    private final ReentrantLock lock = new ReentrantLock();
+    private final Set<String> rewardedAttractionNames =
+        ConcurrentHashMap.newKeySet();
     private UserPreferences userPreferences = new UserPreferences();
     private List<Provider> tripDeals = new ArrayList<>();
     public User(UUID userId, String userName, String phoneNumber, String emailAddress) {
@@ -49,17 +56,27 @@ public class User {
     /** the Set does one hash lookup instead of a scan for checking
      *  Duplicates. **/
     public void addUserReward(UserReward userReward){
-        if (rewardedAttractionNames.add(userReward.attraction.attractionName)){
-            userRewards.add(userReward);
+        lock.lock();
+        try {
+            if (rewardedAttractionNames.add(userReward.attraction.attractionName)){
+                userRewards.add(userReward);
+            }
+        } finally {
+            lock.unlock();
         }
+    }
+    public boolean hasRewardFor(String attractionName){
+        return rewardedAttractionNames.contains(attractionName);
     }
 
     public List<UserReward> getUserRewards() {
-        return Collections.unmodifiableList(userRewards);
-    }
+        lock.lock();
+        try {
+	        return List.copyOf(userRewards);
+        } finally {
+            lock.unlock();
+        }
 
-    public boolean hasRewardFor(String attractionName){
-        return rewardedAttractionNames.contains(attractionName);
     }
 
     public UserPreferences getUserPreferences() {
