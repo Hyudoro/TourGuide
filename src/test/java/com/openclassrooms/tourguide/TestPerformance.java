@@ -41,7 +41,7 @@ public class TestPerformance {
      * assertTrue(TimeUnit.MINUTES.toSeconds(15) >=
      * stopWatch.getDuration().toSeconds());
      *
-     * highVolumeGetRewards: 100,000 users within 20 minutes:
+     * highVolumeGetRewards: 100,000 users within 15 minutes:
      * assertTrue(TimeUnit.MINUTES.toSeconds(20) >=
      * stopWatch.getDuration().toSeconds());
      */
@@ -53,7 +53,7 @@ public class TestPerformance {
         RewardsService rewardsService = new RewardsService(new RewardCentral(), attractionCatalog);
         // Users should be incremented up to 100,000, and test finishes within 15
         // minutes
-        InternalTestHelper.setInternalUserNumber(100);
+        InternalTestHelper.setInternalUserNumber(100000);
         TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService, attractionCatalog);
         // otherwise the Tracker try to access the same ressource at the same time as the watcher (stopWatch).
         tourGuideService.tracker.stopTracking();
@@ -65,9 +65,9 @@ public class TestPerformance {
         stopWatch.start();
         tourGuideService.trackAllUsers(allUsers);
         stopWatch.stop();
-        long elapsedSeconds = stopWatch.getDuration().toSeconds();
-        System.out.println("highVolumeTrackLocation: Time Elapsed: " + elapsedSeconds + " seconds.");
-        assertTrue(TimeUnit.MINUTES.toSeconds(15) >= elapsedSeconds);
+        long elapsedMillis = stopWatch.getDuration().toMillis();
+        System.out.println("highVolumeTrackLocation: Time Elapsed: " + elapsedMillis+ " ms.");
+        assertTrue(TimeUnit.MINUTES.toMillis(15) >= elapsedMillis);
     }
 
     @Test
@@ -78,7 +78,7 @@ public class TestPerformance {
 
         // Users should be incremented up to 100,000, and test finishes within 20
         // minutes
-        InternalTestHelper.setInternalUserNumber(100);
+        InternalTestHelper.setInternalUserNumber(100000);
         TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService, attractionCatalog);
         // otherwise the Tracker try to access the same ressource at the same time as the watchenr (stopWatch)
         tourGuideService.tracker.stopTracking();
@@ -94,9 +94,9 @@ public class TestPerformance {
             assertTrue(user.getUserRewards().size() > 0);
         }
 
-        long elapsedSeconds = stopWatch.getDuration().toSeconds();
-        System.out.println("highVolumeGetRewards: Time Elapsed: " + elapsedSeconds + " seconds.");
-        assertTrue(TimeUnit.MINUTES.toSeconds(20) >= elapsedSeconds);
+        long elapsedMillis = stopWatch.getDuration().toSeconds();
+        System.out.println("highVolumeGetRewards: Time Elapsed: " + elapsedMillis + " seconds.");
+        assertTrue(TimeUnit.MINUTES.toSeconds(20) >= elapsedMillis);
     }
 
 }

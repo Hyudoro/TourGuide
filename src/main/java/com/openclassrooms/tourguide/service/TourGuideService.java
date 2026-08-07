@@ -61,8 +61,6 @@ public class TourGuideService {
         tracker.stopTracking();
     }
 
-
-
     public List<UserReward> getUserRewards(User user) {
         return user.getUserRewards();
     }
