@@ -2,8 +2,11 @@ package com.openclassrooms.tourguide.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.springframework.stereotype.Service;
 
@@ -89,6 +92,33 @@ public class RewardsService {
 
     private int getRewardPoints(Attraction attraction, User user) {
         return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
+    }
+
+    /**
+     * The reward points for several attractions, in the order they were given.
+     * Each lookup sleeps ~500 ms inside RewardCentral, so they all wait at the
+     * same time rather than one after another.
+     */
+    public int[] getRewardPoints(List<Attraction> attractions, User user) {
+        List<Callable<Integer>> lookups = new ArrayList<>(attractions.size());
+        for (Attraction attraction : attractions) {
+            lookups.add(() -> getRewardPoints(attraction, user));
+        }
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            // invokeAll returns once every lookup is done, in the submitted order
+            List<Future<Integer>> results = executor.invokeAll(lookups);
+            int[] points = new int[results.size()];
+            for (int i = 0; i < points.length; i++) {
+                points[i] = results.get(i).get();
+            }
+            return points;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while reading reward points", e);
+        } catch (ExecutionException e) {
+            // get() would otherwise bury the real cause in a Future, the 2.1 trap
+            throw new IllegalStateException("Reward point lookup failed", e.getCause());
+        }
     }
 
 }
