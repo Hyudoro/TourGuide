@@ -1,18 +1,22 @@
 package com.openclassrooms.tourguide;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
+import com.openclassrooms.tourguide.dto.NearbyAttractionDto;
 import com.openclassrooms.tourguide.helper.InternalTestHelper;
 import com.openclassrooms.tourguide.service.AttractionCatalog;
 import com.openclassrooms.tourguide.service.RewardsService;
 import com.openclassrooms.tourguide.service.TourGuideService;
 import com.openclassrooms.tourguide.user.User;
+import com.openclassrooms.tourguide.util.DistanceCalculator;
 
 import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
@@ -98,7 +102,8 @@ public class TestTourGuideService {
     }
 
     @Test
-    public void getNearbyAttractions() {
+    public void getNearbyAttractions_shouldReturnFiveAttractions_eachOneFullyDescribed() {
+        // GIVEN a user whose position has just been tracked
         GpsUtil gpsUtil = new GpsUtil();
         AttractionCatalog attractionCatalog = new AttractionCatalog(gpsUtil);
         RewardsService rewardsService = new RewardsService(new RewardCentral(), attractionCatalog);
@@ -108,11 +113,54 @@ public class TestTourGuideService {
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
         VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user);
 
-        List<Attraction> attractions = tourGuideService.getNearbyAttractions(visitedLocation);
+        // WHEN the nearby attractions are asked for
+        List<NearbyAttractionDto> nearbyAttractions = tourGuideService.getNearbyAttractions(user);
 
         tourGuideService.tracker.stopTracking();
 
-        assertEquals(5, attractions.size());
+        // THEN five come back, closest first, every field filled in
+        assertThat(nearbyAttractions).hasSize(5);
+        assertThat(nearbyAttractions)
+            .extracting(NearbyAttractionDto::distanceInMiles)
+            .isSorted();
+        assertThat(nearbyAttractions).allSatisfy(nearby -> {
+            assertThat(nearby.attractionName()).isNotBlank();
+            assertThat(nearby.userLatitude()).isEqualTo(visitedLocation.location.latitude);
+            assertThat(nearby.userLongitude()).isEqualTo(visitedLocation.location.longitude);
+            assertThat(nearby.distanceInMiles()).isNotNegative();
+            assertThat(nearby.rewardPoints()).isPositive();
+        });
+    }
+
+    @Test
+    public void getNearbyAttractions_shouldReturnTheClosestFive_howeverFarAwayTheyAre() {
+        // GIVEN a user whose position has just been tracked
+        GpsUtil gpsUtil = new GpsUtil();
+        AttractionCatalog attractionCatalog = new AttractionCatalog(gpsUtil);
+        RewardsService rewardsService = new RewardsService(new RewardCentral(), attractionCatalog);
+        InternalTestHelper.setInternalUserNumber(0);
+        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService, attractionCatalog);
+
+        User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
+        VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user);
+
+        // AND the same five worked out the slow, obvious way
+        List<String> closestFiveNames = attractionCatalog.getAttractions().stream()
+            .sorted(Comparator.comparingDouble((Attraction attraction) ->
+                DistanceCalculator.getDistance(attraction, visitedLocation.location)))
+            .limit(5)
+            .map(attraction -> attraction.attractionName)
+            .toList();
+
+        // WHEN the nearby attractions are asked for
+        List<NearbyAttractionDto> nearbyAttractions = tourGuideService.getNearbyAttractions(user);
+
+        tourGuideService.tracker.stopTracking();
+
+        // THEN the selection picked the same attractions, in the same order
+        assertThat(nearbyAttractions)
+            .extracting(NearbyAttractionDto::attractionName)
+            .containsExactlyElementsOf(closestFiveNames);
     }
 
     public void getTripDeals() {

@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.openclassrooms.tourguide.dto.NearbyAttractionDto;
 import com.openclassrooms.tourguide.helper.InternalTestHelper;
 import com.openclassrooms.tourguide.tracker.Tracker;
 import com.openclassrooms.tourguide.user.User;
@@ -103,7 +104,9 @@ public class TourGuideService {
         return visitedLocation;
     }
 
-    public List<Attraction> getNearbyAttractions(VisitedLocation visitedLocation) {
+    /** The five closest attractions to the user, however far away they are. */
+    public List<NearbyAttractionDto> getNearbyAttractions(User user) {
+        Location userLocation = getUserLocation(user).location;
         List<Attraction> attractions = attractionCatalog.getAttractions();
         int total = attractions.size();
         int wanted = Math.min(NUMBER_OF_NEARBY_ATTRACTIONS, total);
@@ -112,11 +115,11 @@ public class TourGuideService {
         double[] miles = new double[total];
         int[] origin = new int[total];
         for (int i = 0; i < total; i++) {
-            miles[i] = DistanceCalculator.getDistance(attractions.get(i),
-                visitedLocation.location);
+            miles[i] = DistanceCalculator.getDistance(attractions.get(i), userLocation);
             origin[i] = i;
         }
         List<Attraction> nearest = new ArrayList<>(wanted);
+        double[] nearestMiles = new double[wanted];
         int live = total;   // everything from 'live onward is removed
         for (int pick = 0; pick < wanted; pick++) {
             int best = 0;
@@ -128,12 +131,29 @@ public class TourGuideService {
                 }
             }
             nearest.add(attractions.get(origin[best]));     // origin[best], not best
+            nearestMiles[pick] = bestMiles;                 // the distance the pick was made on
 
             live--;                                         // drop the last live element into the hole
             miles[best]  = miles[live];
             origin[best] = origin[live];
         }
-        return nearest;
+
+        // one RewardCentral call per attraction, all five waiting at the same time
+        int[] rewardPoints = rewardsService.getRewardPoints(nearest, user);
+
+        List<NearbyAttractionDto> nearby = new ArrayList<>(wanted);
+        for (int i = 0; i < wanted; i++) {
+            Attraction attraction = nearest.get(i);
+            nearby.add(new NearbyAttractionDto(
+                attraction.attractionName,
+                attraction.latitude,
+                attraction.longitude,
+                userLocation.latitude,
+                userLocation.longitude,
+                nearestMiles[i],
+                rewardPoints[i]));
+        }
+        return nearby;
     }
 
     /**********************************************************************************
