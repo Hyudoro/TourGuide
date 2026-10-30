@@ -1,21 +1,31 @@
-# Stack
+# TourGuide
 
-    > Java 21
-    > Spring Boot 3.5.16
-    > JUnit 5
-    > maven 3.3.4
+[![CI](https://github.com/Hyudoro/TourGuide/actions/workflows/ci.yml/badge.svg)](https://github.com/Hyudoro/TourGuide/actions/workflows/ci.yml)
 
-# How to have gpsUtil, rewardCentral and tripPricer dependencies available ?
+Spring Boot web app that tracks users' locations and turns them into tour
+recommendations: nearby attractions, reward points and trip deals. Tuned for
+throughput — virtual threads, batched parallel reward fetching, precomputed
+trigonometry for distance checks — on top of the gpsUtil, RewardCentral and
+TripPricer libraries.
+
+## Stack
+
+- Java 21
+- Spring Boot 3.5.16
+- JUnit 5
+- Maven 3.9.14 (wrapper)
+
+## How to install the gpsUtil, rewardCentral and tripPricer dependencies?
 
 > Run :
-## gpsUtil
+### gpsUtil
 - ./mvnw install:install-file -Dfile=/libs/gpsUtil.jar -DgroupId=gpsUtil -DartifactId=gpsUtil -Dversion=1.0.0 -Dpackaging=jar
-## RewardCentral
+### RewardCentral
 - ./mvnw install:install-file -Dfile=/libs/RewardCentral.jar -DgroupId=rewardCentral -DartifactId=rewardCentral -Dversion=1.0.0 -Dpackaging=jar
-## TripPricer
+### TripPricer
 - ./mvnw install:install-file -Dfile=/libs/TripPricer.jar -DgroupId=tripPricer -DartifactId=tripPricer -Dversion=1.0.0 -Dpackaging=jar
 
-# Run the app
+## Run the app
 
 
 > - Run the app :  `./mvnw spring-boot:run`   (Windows: `mvnw.cmd spring-boot:run`)
