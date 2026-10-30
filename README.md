@@ -4,9 +4,9 @@
 
 Spring Boot web app that tracks users' locations and turns them into tour
 recommendations: nearby attractions, reward points and trip deals. Tuned for
-throughput — virtual threads, batched parallel reward fetching, precomputed
-trigonometry for distance checks — on top of the gpsUtil, RewardCentral and
-TripPricer libraries.
+throughput, with virtual threads, batched parallel reward fetching and
+precomputed trigonometry for distance checks, on top of the gpsUtil,
+RewardCentral and TripPricer libraries.
 
 ## Stack
 
